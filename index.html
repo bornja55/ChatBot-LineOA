@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LINE Login</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <h1>LINE Login</h1>
+  <button id="loginButton">Login with LINE</button>
+  <script>
+    async function main() {
+      await liff.init({ liffId: "YOUR_LIFF_ID" });
+      document.getElementById("loginButton").addEventListener("click", function() {
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        }
+      });
+    }
+    main();
+  </script>
+</body>
+</html>
