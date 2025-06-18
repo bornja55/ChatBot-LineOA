@@ -3,12 +3,26 @@
 <head>
   <title>ลงทะเบียนพนักงานผ่าน LINE LIFF</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, select { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; }
+    button { width: 100%; padding: 15px; background-color: #00C300; color: white; border: none; border-radius: 5px; }
+  </style>
 </head>
 <body>
   <h1>ลงทะเบียนพนักงาน</h1>
   <form id="regForm">
-    <input type="text" id="empId" placeholder="รหัสพนักงาน" required><br>
-    <input type="text" id="name" placeholder="ชื่อ-นามสกุล" required><br>
+    <input type="text" id="employee_id" placeholder="รหัสพนักงาน" required><br>
+    <input type="text" id="customer_name" placeholder="ชื่อ-นามสกุล" required><br>
+    <input type="email" id="email" placeholder="อีเมล" required><br>
+    
+    <select id="group" required>
+      <option value="">เลือกกลุ่ม/แผนก</option>
+      <option value="24CS">24CS</option>
+      <option value="24Home">24Home</option>
+      <option value="Fr.Jell">Dr.Jell</option>
+    </select><br>
+    
     <button type="submit">ลงทะเบียน</button>
   </form>
   <div id="result"></div>
@@ -27,13 +41,15 @@
 
     document.getElementById('regForm').onsubmit = async function(e) {
       e.preventDefault();
-      // ส่งข้อมูลไป Google Apps Script
       const response = await fetch('YOUR_GOOGLE_SCRIPT_URL', {
         method: 'POST',
         body: JSON.stringify({
           line_user_id: lineUserId,
-          emp_id: document.getElementById('empId').value,
-          name: document.getElementById('name').value
+          employee_id: document.getElementById('employee_id').value,
+          customer_name: document.getElementById('customer_name').value,
+          email: document.getElementById('email').value,
+          group: document.getElementById('group').value,
+          role: 'user' // default เป็น user
         }),
         headers: { 'Content-Type': 'application/json' }
       });
