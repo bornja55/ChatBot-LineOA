@@ -41,7 +41,7 @@
 
     document.getElementById('regForm').onsubmit = async function(e) {
       e.preventDefault();
-      const response = await fetch('YOUR_GOOGLE_SCRIPT_URL', {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbwaiZAn4XCbalh9sg_2oPbPyeQP9_2CTnNQ_sWH_eqeHSXBafzlVCF9lb4P-tXhruCrhw/exec', {
         method: 'POST',
         body: JSON.stringify({
           line_user_id: lineUserId,
