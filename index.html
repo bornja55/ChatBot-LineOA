@@ -68,7 +68,6 @@
           document.getElementById('result').innerText = 'คุณลงทะเบียนไปแล้ว หรือรหัสพนักงานนี้ถูกใช้แล้ว';
           return;
         }
-        const data = await response.json();
         document.getElementById('result').innerText = 'ลงทะเบียนสำเร็จ!';
         setTimeout(() => {
           if (liff.isInClient()) {
