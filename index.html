@@ -1,22 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LINE Login</title>
+  <title>ลงทะเบียนพนักงานผ่าน LINE LIFF</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-  <h1>LINE Login</h1>
-  <button id="loginButton">Login with LINE</button>
+  <h1>ลงทะเบียนพนักงาน</h1>
+  <form id="regForm">
+    <input type="text" id="empId" placeholder="รหัสพนักงาน" required><br>
+    <input type="text" id="name" placeholder="ชื่อ-นามสกุล" required><br>
+    <button type="submit">ลงทะเบียน</button>
+  </form>
+  <div id="result"></div>
   <script>
+    let lineUserId = '';
     async function main() {
-      await liff.init({ liffId: "YOUR_LIFF_ID" });
-      document.getElementById("loginButton").addEventListener("click", function() {
-        if (!liff.isLoggedIn()) {
-          liff.login();
-        }
-      });
+      await liff.init({ liffId: "2007582259-N0m1JY63" });
+      if (!liff.isLoggedIn()) {
+        liff.login();
+      } else {
+        const profile = await liff.getProfile();
+        lineUserId = profile.userId;
+      }
     }
     main();
+
+    document.getElementById('regForm').onsubmit = async function(e) {
+      e.preventDefault();
+      // ส่งข้อมูลไป Google Apps Script
+      const response = await fetch('YOUR_GOOGLE_SCRIPT_URL', {
+        method: 'POST',
+        body: JSON.stringify({
+          line_user_id: lineUserId,
+          emp_id: document.getElementById('empId').value,
+          name: document.getElementById('name').value
+        }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      document.getElementById('result').innerText = 'ลงทะเบียนสำเร็จ';
+      setTimeout(() => liff.closeWindow(), 1500);
+    }
   </script>
 </body>
 </html>
