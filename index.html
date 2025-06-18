@@ -82,6 +82,7 @@
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+
         
         const data = await response.json();
         document.getElementById('result').innerText = 'ลงทะเบียนสำเร็จ!';
