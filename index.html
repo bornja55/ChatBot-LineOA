@@ -2,11 +2,113 @@
 <html>
 <head>
   <title>ลงทะเบียนพนักงานผ่าน LINE LIFF</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    input, select { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; }
-    button { width: 100%; padding: 15px; background-color: #00C300; color: white; border: none; border-radius: 5px; }
+    * {
+      box-sizing: border-box;
+    }
+    body { 
+      font-family: Arial, sans-serif; 
+      padding: 15px; 
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.4;
+      background-color: #f8f9fa;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+      font-size: 24px;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    input, select { 
+      width: 100%; 
+      padding: 15px; 
+      margin: 8px 0 15px 0; 
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #00C300;
+    }
+    button { 
+      width: 100%; 
+      padding: 18px; 
+      background-color: #00C300; 
+      color: white; 
+      border: none; 
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #00a000;
+    }
+    button:active {
+      background-color: #008000;
+    }
+    #result {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .success {
+      color: #00C300;
+      background-color: #f0fff0;
+    }
+    .error {
+      color: #ff4444;
+      background-color: #fff0f0;
+    }
+    .warning {
+      color: #ff8800;
+      background-color: #fff8f0;
+    }
+    
+    /* สำหรับหน้าจอเล็ก */
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+        font-size: 14px;
+      }
+      h1 {
+        font-size: 20px;
+        margin-bottom: 20px;
+      }
+      form {
+        padding: 15px;
+      }
+      input, select {
+        padding: 12px;
+        font-size: 16px; /* ป้องกัน zoom ใน iOS */
+      }
+      button {
+        padding: 15px;
+        font-size: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -26,6 +128,19 @@
   <div id="result"></div>
   <script>
     let lineUserId = '';
+    
+    function closeWindow() {
+      try {
+        if (liff.isInClient()) {
+          liff.closeWindow();
+        } else {
+          window.close();
+        }
+      } catch (error) {
+        console.log('Cannot close window:', error);
+      }
+    }
+    
     async function main() {
       try {
         await liff.init({ liffId: "2007582259-N0m1JY63" });
@@ -36,18 +151,25 @@
           lineUserId = profile.userId;
         }
       } catch (error) {
-        document.getElementById('result').innerText = `LIFF Error: ${error.message}`;
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerText = `LIFF Error: ${error.message}`;
+        resultDiv.className = 'error';
       }
     }
     main();
 
     document.getElementById('regForm').onsubmit = async function(e) {
       e.preventDefault();
+      const resultDiv = document.getElementById('result');
+      
       if (!lineUserId) {
         alert('ยังไม่ได้รับ Line User ID กรุณารอสักครู่แล้วลองใหม่');
         return;
       }
-      document.getElementById('result').innerText = 'กำลังส่งข้อมูล...';
+      
+      resultDiv.innerText = 'กำลังส่งข้อมูล...';
+      resultDiv.className = '';
+      
       try {
         const params = new URLSearchParams();
         params.append('line_user_id', lineUserId);
@@ -56,27 +178,34 @@
         params.append('email', document.getElementById('email').value);
         params.append('group', document.getElementById('group').value);
         params.append('role', 'user');
+        
         const response = await fetch('https://script.google.com/macros/s/AKfycbzgsJvY5e3AIfQ7ekoztSE2o5DQ0dqmhjLTp2Eyzz8JgSDFhKvavg4PoGh-TTVINRkAGA/exec', {
           method: 'POST',
           body: params
         });
+        
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+        
         const data = await response.json();
+        
         if (data.result === 'duplicate') {
-          document.getElementById('result').innerText = 'คุณลงทะเบียนไปแล้ว หรือรหัสพนักงานนี้ถูกใช้แล้ว';
-          return;
+          resultDiv.innerText = 'คุณลงทะเบียนไปแล้ว หรือรหัสพนักงานนี้ถูกใช้แล้ว';
+          resultDiv.className = 'warning';
+        } else {
+          resultDiv.innerText = 'ลงทะเบียนสำเร็จ! กำลังปิดหน้าต่าง...';
+          resultDiv.className = 'success';
         }
-        document.getElementById('result').innerText = 'ลงทะเบียนสำเร็จ!';
-        setTimeout(() => {
-          if (liff.isInClient()) {
-            liff.closeWindow();
-          }
-        }, 1500);
+        
       } catch (error) {
-        document.getElementById('result').innerText = `เกิดข้อผิดพลาด: ${error.message}`;
+        resultDiv.innerText = `เกิดข้อผิดพลาด: ${error.message}`;
+        resultDiv.className = 'error';
       }
+      
+      setTimeout(() => {
+        closeWindow();
+      }, 2000);
     }
   </script>
 </body>
