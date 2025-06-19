@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin - แก้ไข Role User</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f0f0f0; }
+    select { padding: 5px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h2>Admin: แก้ไข Role User</h2>
+  <div id="g_id_onload"
+       data-client_id="321386758214-susdg1q0qjgkf3lsgd8ig9itgoaski4b.apps.googleusercontent.com"
+       data-callback="onSignIn"
+       data-auto_prompt="false">
+  </div>
+  <div class="g_id_signin" data-type="standard"></div>
+  <div id="adminPanel" class="hidden">
+    <table id="userTable">
+      <thead>
+        <tr>
+          <th>Line User ID</th>
+          <th>Employee ID</th>
+          <th>ชื่อ</th>
+          <th>Email</th>
+          <th>Group</th>
+          <th>Role</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button onclick="saveChanges()">บันทึกการเปลี่ยนแปลง</button>
+    <div id="status"></div>
+  </div>
+  <script>
+    let userData = [];
+    let userEmail = "";
+
+    function onSignIn(response) {
+      // ดึง email จาก credential
+      const id_token = response.credential;
+      fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + id_token)
+        .then(res => res.json())
+        .then(data => {
+          userEmail = data.email;
+          // ส่ง email ไป backend เพื่อตรวจสอบสิทธิ์
+          fetch('https://script.google.com/macros/s/AKfycbzgsJvY5e3AIfQ7ekoztSE2o5DQ0dqmhjLTp2Eyzz8JgSDFhKvavg4PoGh-TTVINRkAGA/exec?email=' + encodeURIComponent(userEmail))
+            .then(res => res.json())
+            .then(result => {
+              if (result.isAdmin) {
+                document.getElementById('adminPanel').classList.remove('hidden');
+                loadUsers();
+              } else {
+                alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+              }
+            });
+        });
+    }
+
+    function loadUsers() {
+      fetch('https://script.google.com/macros/s/AKfycbzgsJvY5e3AIfQ7ekoztSE2o5DQ0dqmhjLTp2Eyzz8JgSDFhKvavg4PoGh-TTVINRkAGA/exec?action=getUsers')
+        .then(res => res.json())
+        .then(data => {
+          userData = data.users;
+          const tbody = document.querySelector('#userTable tbody');
+          tbody.innerHTML = '';
+          userData.forEach((user, idx) => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${user.line_user_id}</td>
+                <td>${user.employee_id}</td>
+                <td>${user.customer_name}</td>
+                <td>${user.email}</td>
+                <td>${user.group}</td>
+                <td>
+                  <select data-idx="${idx}">
+                    <option value="user" ${user.role === 'user' ? 'selected' : ''}>user</option>
+                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>admin</option>
+                  </select>
+                </td>
+                <td><button onclick="removeUser(${idx})">ลบ</button></td>
+              </tr>
+            `;
+          });
+        });
+    }
+
+    function saveChanges() {
+      // เก็บ role ที่เปลี่ยน
+      document.querySelectorAll('select[data-idx]').forEach(sel => {
+        userData[sel.dataset.idx].role = sel.value;
+      });
+      fetch('https://script.google.com/macros/s/AKfycbzgsJvY5e3AIfQ7ekoztSE2o5DQ0dqmhjLTp2Eyzz8JgSDFhKvavg4PoGh-TTVINRkAGA/exec', {
+        method: 'POST',
+        body: JSON.stringify({action: 'updateRoles', users: userData, email: userEmail}),
+        headers: {'Content-Type': 'application/json'}
+      })
+      .then(res => res.json())
+      .then(result => {
+        document.getElementById('status').innerText = result.message;
+      });
+    }
+
+    function removeUser(idx) {
+      if (confirm('ต้องการลบ user นี้จริงหรือไม่?')) {
+        userData.splice(idx, 1);
+        loadUsers();
+      }
+    }
+  </script>
+</body>
+</html>
