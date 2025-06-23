@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Facebook Login + Form</title>
+</head>
+<body>
+
+<div id="login-section">
+  <button onclick="FB.login(checkLoginState, {scope: 'email'})">Login with Facebook</button>
+</div>
+
+<div id="form-section" style="display:none;">
+  <h3>กรุณากรอกข้อมูลเพิ่มเติม</h3>
+  <form id="user-form">
+    <label>ชื่อ: <span id="fb-name"></span></label><br>
+    <label>อีเมล: <span id="fb-email"></span></label><br><br>
+    <label>เบอร์โทรศัพท์: <input type="text" id="phone" name="phone" required></label><br><br>
+    <button type="submit">ส่งข้อมูล</button>
+  </form>
+</div>
+
+<script>
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '691055147131199', // เปลี่ยนเป็น App ID ของคุณ
+      cookie     : true,
+      xfbml      : true,
+      version    : 'v17.0'
+    });
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "https://connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+
+  function checkLoginState() {
+    FB.getLoginStatus(function(response) {
+      if (response.status === 'connected') {
+        FB.api('/me', {fields: 'name,email,id'}, function(response) {
+          document.getElementById('fb-name').textContent = response.name;
+          document.getElementById('fb-email').textContent = response.email || 'ไม่มีอีเมล';
+          document.getElementById('login-section').style.display = 'none';
+          document.getElementById('form-section').style.display = 'block';
+
+          // เก็บข้อมูล id, name, email ไว้ใช้ส่ง
+          window.fbUserData = {
+            meta_user_id: response.id,
+            customer_display: response.name,
+            email: response.email || ''
+          };
+        });
+      } else {
+        alert('กรุณาเข้าสู่ระบบ Facebook ก่อน');
+      }
+    });
+  }
+
+  document.getElementById('user-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const phone = document.getElementById('phone').value;
+    const data = {
+      meta_user_id: window.fbUserData.meta_user_id,
+      customer_display: window.fbUserData.customer_display,
+      email: window.fbUserData.email,
+      telephone: phone
+    };
+
+    fetch('https://script.google.com/macros/s/AKfycbxxvzCrsAl7xDTsFDA1mQrc5-3KNV1lmtRvrdZInWCe2uVqdZ9F5LituFowTBQD7zMSFQ/exec', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(res => res.json())
+    .then(result => {
+      alert('ส่งข้อมูลเรียบร้อยแล้ว ขอบคุณครับ');
+      // อาจจะ redirect หรือซ่อนฟอร์มได้ที่นี่
+      document.getElementById('form-section').style.display = 'none';
+    })
+    .catch(err => {
+      alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+      console.error(err);
+    });
+  });
+</script>
+
+</body>
+</html>
